@@ -124,7 +124,7 @@ export default function AddPage() {
         const result = await createTherapist(therapistPayload);
         if (result.success) {
           toast.success("Therapist added successfully!");
-          router.push("/dashboard");
+          router.push("/admin-dashboard");
         } else {
           toast.error(`Failed to add therapist: ${result.message}`);
         }
@@ -154,7 +154,7 @@ export default function AddPage() {
         const result = await addMedication(medicationPayload);
         if (result.success) {
           toast.success("Medication added successfully!");
-          router.push("/dashboard");
+          router.push("/admin-dashboard");
         } else {
           toast.error(`Failed to add medication: ${result.message}`);
         }
@@ -180,7 +180,7 @@ export default function AddPage() {
           <div className="flex flex-row items-center justify-between mb-4">
             <button
               className="text-black flex items-center"
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push("/admin-dashboard")}
             >
               <ArrowLeft className="w-6 h-6 mr-2" />
               Back
