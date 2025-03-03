@@ -44,6 +44,7 @@ const ChatPage :React.FC<ChatRoomProps> = ({ params }) => {
   
     useEffect(scrollToBottom, [messages]);
 
+    
     useEffect(() => {
       if (roomId) {
         fetchChatMessages(roomId)
@@ -103,7 +104,7 @@ const ChatPage :React.FC<ChatRoomProps> = ({ params }) => {
     
           websocket.onclose = () => {
             console.log('WebSocket disconnected');
-            setWs(null);
+            setTimeout(initializeWebSocket, 1000);
           };
     
           return () => {

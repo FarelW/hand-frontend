@@ -134,3 +134,49 @@ interface CheckIn {
   MoodScore:   number,
   CheckInDate: string,
 }
+
+export interface ChatRoom {
+  ID: string;
+  FirstUserID: string;
+  SecondUserID: string;
+  IsEnd: boolean;
+  Type: string;
+  CreatedAt: string;
+  FirstUser: {
+    ID: string;
+    name: string;
+    image_url: string;
+  };
+  SecondUser: {
+    ID: string;
+    name: string;
+    image_url: string;
+  };
+}
+
+export async function fetchChatRoomsWithMessages(): Promise<ChatRoom[] | undefined> {
+  const token = await getToken(); // Get the JWT token
+  
+  try {
+    const response = await fetch(`${API_URL}/room/chat`, {
+      method: "GET",
+      credentials: "include", // Ensure cookies for session management are included with the request
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log("Chat Rooms with Messages Fetched:", data);
+      return data as ChatRoom[];
+    } else {
+      throw new Error(data.message || "Error fetching chat rooms with messages");
+    }
+  } catch (error) {
+    console.error("Error fetching chat rooms with messages:", error);
+    return undefined;
+  }
+}

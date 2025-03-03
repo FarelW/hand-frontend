@@ -38,7 +38,7 @@ export default function EnhancedAnonymousChat() {
     const initWebSocket = async () => {
       try {
         const websocket = await createWebSocket(SOCKET_SERVER_URL); // Ensure your token is correctly passed if needed
-  
+        console.log(websocket)
         websocket.onopen = () => {
           console.log("connected");
           websocket.send(JSON.stringify({ event: "check_match", data: "" }));
@@ -58,12 +58,19 @@ export default function EnhancedAnonymousChat() {
             setStep("select")
           }
         };
+
+        setWs(websocket);
   
         websocket.onerror = (error: Event) => {
           console.error("WebSocket error:", error);
         };
+
+        websocket.onclose = () => {
+          console.log('WebSocket disconnected');
+          setTimeout(initWebSocket, 1000);
+        };
   
-        setWs(websocket);
+
   
         return () => {
           websocket.close();
@@ -117,7 +124,7 @@ export default function EnhancedAnonymousChat() {
                   }`}
                 >
                   <div className="relative w-full h-full">
-                    <Image src={mood.icon} alt={mood.name} layout="fill" objectFit="contain" />
+                    <Image src={mood.icon} alt={mood.name} layout="fill" objectFit="cover" />
                   </div>
                   <span className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700">{mood.name}</span>
                 </button>

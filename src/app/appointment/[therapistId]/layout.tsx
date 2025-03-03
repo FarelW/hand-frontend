@@ -1,14 +1,24 @@
 "use client";
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import { UserIcon, CalendarIcon, MessageCircleIcon } from "lucide-react";
+import { createWebSocket } from "../../util/socket";
+import { useRouter } from "next/navigation";
 
 interface LayoutProps {
   children: ReactNode;
+  params: {
+    therapistId: string;
+  };
 }
 
-export default function AppointmentLayout({ children }: LayoutProps) {
+const SOCKET_SERVER_URL = process.env.NEXT_PUBLIC_SOCKET_URL || ""
+
+export default function AppointmentLayout({ children, params }: LayoutProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { therapistId } = params;
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const router = useRouter();
   const menuItems = [
     {
       id: "pick",
@@ -30,8 +40,50 @@ export default function AppointmentLayout({ children }: LayoutProps) {
     },
   ];
 
+  useEffect(() => {
+    const initWebSocket = async () => {
+      try {
+        const websocket = await createWebSocket(SOCKET_SERVER_URL); // Ensure your token is correctly passed if needed
+  
+        websocket.onopen = () => {
+          console.log("connected");
+          websocket.send(JSON.stringify({ event: "check_match", data: "" }));
+        };
+  
+        websocket.onmessage = (event: MessageEvent) => {
+          const data = JSON.parse(event.data);
+          if (data.event === "enter_room") {
+            const roomId = data.data;
+            router.push(`/appointment/${therapistId}/chat/${roomId}`); // Redirect to the matched room
+          }
+          
+        };
+  
+        websocket.onerror = (error: Event) => {
+          console.error("WebSocket error:", error);
+        };
+  
+        setWs(websocket);
+  
+        return () => {
+          websocket.close();
+        };
+      } catch (error) {
+        console.error('Failed to initialize WebSocket:', error);
+      }
+    };
+  
+    initWebSocket();
+  }, [setWs]); // Ensure dependencies are correctly listed
+
+  const handleMenuClick = (id: string) => {
+    if (id === "chat" && ws) {
+      ws.send(JSON.stringify({ event: "chat_therapy", data: therapistId }));
+    }
+  };
+
   return (
-    <div className="min-h-screen pt-24 px-4 sm:px-6 lg:px-4 bg-[#FFE9D0]">
+    <div className="min-h-screen pt-24 px-4 sm:px-6 lg:px-4 bg-[#FFF6EF]">
       <div className="max-w-full mx-auto">
         <div className="lg:flex lg:gap-8">
           <aside className="lg:w-64">
@@ -63,6 +115,7 @@ export default function AppointmentLayout({ children }: LayoutProps) {
                 <Link
                   key={item.id}
                   href={item.href}
+                  onClick={() => handleMenuClick(item.id)}
                   className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ease-in-out bg-white text-gray-700 hover:bg-gray-50`}
                 >
                   {React.createElement(item.icon, {

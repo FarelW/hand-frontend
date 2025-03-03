@@ -8,6 +8,7 @@ import { closeSchedule } from "@/app/api/therapist";
 import { getCookie } from "cookies-next";
 import { fetchUpcomingAppointment } from "@/app/api/therapist";
 import { DatePicker } from "@/components/ui/datePicker";
+import Link from "next/link";
 
 interface Therapist {
   image_url: string;
@@ -18,7 +19,7 @@ interface Therapist {
 }
 
 interface Appointment {
-  id: string; 
+  ID: string; 
   AppointmentDate: string;
   Type: string;
   Therapist: {
@@ -153,8 +154,8 @@ export default function TherapistClient() {
                 );
                 console.log(appointments.length);
                 return (
-                  <Card
-                    key={appointment.id}
+                  <Link key={appointment.ID} href={`/therapist-dashboard/${appointment.ID}`}>
+                  <Card 
                     className="bg-gray-100 p-4 flex items-center justify-between mb-4"
                   >
                     <div className="flex items-center gap-2">
@@ -179,6 +180,7 @@ export default function TherapistClient() {
                       </span>
                     </Button>
                   </Card>
+                  </Link>
                 );
               })
             ) : (

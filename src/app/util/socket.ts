@@ -10,6 +10,7 @@ export const createWebSocket = async (url: string) => {
   };
 
   ws.onclose = () => {
+    console.log(ws)
     console.log("Disconnected from WebSocket");
   };
 
