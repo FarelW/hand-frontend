@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   Calendar,
@@ -207,7 +206,6 @@ export default function TherapistDashboard() {
                   </h2>
                   <p className="text-muted-foreground">Therapist</p>
                 </div>
-
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <MapPin className="h-5 w-5 text-muted-foreground" />
@@ -228,7 +226,6 @@ export default function TherapistDashboard() {
                     <span>{therapist?.specialization || "Mental Health"}</span>
                   </div>
                 </div>
-
                 <div className="mt-6">
                   <Button className="w-full" variant="outline">
                     <Link
@@ -246,7 +243,7 @@ export default function TherapistDashboard() {
           {/* Main Content */}
           <div className="lg:col-span-9">
             <Tabs
-              defaultValue="overview"
+              value={activeTab}
               className="w-full"
               onValueChange={setActiveTab}
             >
@@ -387,7 +384,7 @@ export default function TherapistDashboard() {
                           return (
                             <Link
                               key={appointment.ID}
-                              href={`/therapist-dashboard/${appointment.ID}`}
+                              href={`/therapist-dashboard/${appointment.ID}?userID=${appointment.User.ID}&therapistID=${appointment.TherapistID}`}
                             >
                               <div className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg bg-[#FFE9D0] hover:bg-[#FFD6B0] transition-colors">
                                 <div className="flex items-center gap-4 mb-2 md:mb-0">
@@ -457,7 +454,7 @@ export default function TherapistDashboard() {
                   <CardHeader>
                     <CardTitle>Manage Your Schedule</CardTitle>
                     <CardDescription>
-                      Block dates when you're unavailable
+                      Block dates when you&apos;re unavailable
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -496,7 +493,7 @@ export default function TherapistDashboard() {
                   <CardHeader>
                     <CardTitle>Blocked Dates</CardTitle>
                     <CardDescription>
-                      Dates you've marked as unavailable
+                      Dates you&apos;ve marked as unavailable
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

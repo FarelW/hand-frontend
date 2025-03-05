@@ -88,11 +88,11 @@ const generateCompleteMoodHistory = (rawData: CheckIn[]): CheckIn[] => {
     const date = new Date(today);
     date.setDate(today.getDate() - i);
 
-    const dateString = date.toISOString().split("T")[0];
+    const dateString = date.toLocaleDateString("en-CA"); 
 
     const moodData = rawData.find(
       (data) =>
-        new Date(data.check_in_date).toISOString().split("T")[0] === dateString
+        new Date(data.check_in_date).toLocaleDateString("en-CA") === dateString 
     );
 
     completeData.push({
@@ -136,7 +136,7 @@ export default function MedicationConsultation() {
   const getMoodEmoji = (moodScore: number) => {
     const mood = emotions.find((e) => e.id === moodScore);
     return mood ? (
-      <Image src={mood.emoji} alt="mood" className="w-8 h-8" />
+      <Image src={mood.emoji} alt="mood" width={32} height={32} className="w-8 h-8" />
     ) : null;
   };
 
@@ -521,7 +521,7 @@ export default function MedicationConsultation() {
                   <CardHeader>
                     <CardTitle>30-Day Mood History</CardTitle>
                     <CardDescription>
-                      Patient's emotional wellbeing over time
+                      Patient&apos;s emotional wellbeing over time
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -609,12 +609,12 @@ export default function MedicationConsultation() {
                   <CardHeader>
                     <CardTitle>Mood Analysis</CardTitle>
                     <CardDescription>
-                      Insights from patient's mood patterns
+                      Insights from patient&apos;s mood patterns
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground mb-4">
-                      Based on the patient's mood history, there appears to be
+                      Based on the patient&apos;s mood history, there appears to be
                       fluctuations in emotional wellbeing. Consider discussing
                       potential triggers and coping strategies during your next
                       consultation.
