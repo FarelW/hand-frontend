@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { get30DaysMoodHistory } from "@/app/api/service";
 import { useParams, useSearchParams } from "next/navigation";
 import { getPastAppointment, PastAppointment } from "@/app/api/appointment";
+import { useRouter } from "next/navigation";
 
 export interface Medication {
   id: string;
@@ -68,16 +69,16 @@ interface CheckIn {
 }
 
 const emotions = [
-  { emoji: "/checkIn/emoji1 (9).png", id: 1 }, 
+  { emoji: "/checkIn/emoji1 (9).png", id: 1 },
   { emoji: "/checkIn/emoji1 (8).png", id: 2 },
   { emoji: "/checkIn/emoji1 (7).png", id: 3 },
-  { emoji: "/checkIn/emoji1 (6).png", id: 4 }, 
+  { emoji: "/checkIn/emoji1 (6).png", id: 4 },
   { emoji: "/checkIn/emoji1 (10).png", id: 5 },
-  { emoji: "/checkIn/emoji1 (1).png", id: 6 }, 
+  { emoji: "/checkIn/emoji1 (1).png", id: 6 },
   { emoji: "/checkIn/emoji1 (3).png", id: 7 },
-  { emoji: "/checkIn/emoji1 (4).png", id: 8 }, 
-  { emoji: "/checkIn/emoji1 (5).png", id: 9 }, 
-  { emoji: "/checkIn/emoji1 (2).png", id: 10 }, 
+  { emoji: "/checkIn/emoji1 (4).png", id: 8 },
+  { emoji: "/checkIn/emoji1 (5).png", id: 9 },
+  { emoji: "/checkIn/emoji1 (2).png", id: 10 },
 ];
 
 const generateCompleteMoodHistory = (rawData: CheckIn[]): CheckIn[] => {
@@ -88,17 +89,17 @@ const generateCompleteMoodHistory = (rawData: CheckIn[]): CheckIn[] => {
     const date = new Date(today);
     date.setDate(today.getDate() - i);
 
-    const dateString = date.toLocaleDateString("en-CA"); 
+    const dateString = date.toLocaleDateString("en-CA");
 
     const moodData = rawData.find(
       (data) =>
-        new Date(data.check_in_date).toLocaleDateString("en-CA") === dateString 
+        new Date(data.check_in_date).toLocaleDateString("en-CA") === dateString
     );
 
     completeData.push({
-      id: moodData?.id || dateString, 
-      mood_score: moodData?.mood_score ?? 5, 
-      check_in_date: date.toISOString(), 
+      id: moodData?.id || dateString,
+      mood_score: moodData?.mood_score ?? 5,
+      check_in_date: date.toISOString(),
     });
   }
 
@@ -122,6 +123,7 @@ export default function MedicationConsultation() {
   const [pastAppointments, setPastAppointments] = useState<PastAppointment[]>(
     []
   );
+  const router = useRouter();
 
   useEffect(() => {
     const fetchMoodHistory = async () => {
@@ -136,7 +138,13 @@ export default function MedicationConsultation() {
   const getMoodEmoji = (moodScore: number) => {
     const mood = emotions.find((e) => e.id === moodScore);
     return mood ? (
-      <Image src={mood.emoji} alt="mood" width={32} height={32} className="w-8 h-8" />
+      <Image
+        src={mood.emoji}
+        alt="mood"
+        width={32}
+        height={32}
+        className="w-8 h-8"
+      />
     ) : null;
   };
 
@@ -239,7 +247,6 @@ export default function MedicationConsultation() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Patient Info Sidebar */}
           <div className="lg:col-span-3">
             <Card className="bg-white shadow-md rounded-xl overflow-hidden sticky top-24">
               <CardHeader className="bg-[#FFE9D0] pb-6">
@@ -287,7 +294,9 @@ export default function MedicationConsultation() {
 
                 <Button
                   className="w-full"
-                  onClick={() => window.open("/chat", "_blank")}
+                  onClick={() =>
+                    router.push(`/therapist-dashboard/chat?userID=${userID}`)
+                  }
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Chat with Patient
@@ -296,7 +305,6 @@ export default function MedicationConsultation() {
             </Card>
           </div>
 
-          {/* Main Content */}
           <div className="lg:col-span-9">
             <Tabs
               defaultValue="consultation"
@@ -310,7 +318,6 @@ export default function MedicationConsultation() {
                 <TabsTrigger value="mood">Mood History</TabsTrigger>
               </TabsList>
 
-              {/* Consultation Tab */}
               <TabsContent value="consultation" className="space-y-6">
                 <Card>
                   <CardHeader>
@@ -450,7 +457,6 @@ export default function MedicationConsultation() {
                 </Card>
               </TabsContent>
 
-              {/* History Tab */}
               <TabsContent value="history" className="space-y-6">
                 <Card>
                   <CardHeader>
@@ -515,7 +521,6 @@ export default function MedicationConsultation() {
                 </Card>
               </TabsContent>
 
-              {/* Mood History Tab */}
               <TabsContent value="mood" className="space-y-6">
                 <Card>
                   <CardHeader>
@@ -614,10 +619,10 @@ export default function MedicationConsultation() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground mb-4">
-                      Based on the patient&apos;s mood history, there appears to be
-                      fluctuations in emotional wellbeing. Consider discussing
-                      potential triggers and coping strategies during your next
-                      consultation.
+                      Based on the patient&apos;s mood history, there appears to
+                      be fluctuations in emotional wellbeing. Consider
+                      discussing potential triggers and coping strategies during
+                      your next consultation.
                     </p>
 
                     <h4 className="font-medium mb-2">Recommendations:</h4>
@@ -636,7 +641,6 @@ export default function MedicationConsultation() {
           </div>
         </div>
 
-        {/* Floating Chat Button */}
         <div className="fixed bottom-6 right-6">
           <Link href="/chat">
             <Button className="rounded-full h-14 w-14 shadow-lg">

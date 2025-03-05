@@ -11,7 +11,7 @@ export default function AdminLayout({
   const roleCookie = cookieStore.get("user_role");
   const role = roleCookie?.value;
 
-  if (role !== "admin") {
+  if (role !== "therapist") {
     redirect("/");
   }
 
