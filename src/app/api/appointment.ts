@@ -84,3 +84,42 @@ export interface AppointmentHistory {
   status: string;
   payment_status: string;
 }
+
+
+export interface PastAppointment {
+  appointment_id: string;
+  conclusion?: string;
+  date: string;
+  medications?: {
+    name: string;
+    dosage?: string;
+    quantity?: string;
+  }[];
+}
+
+export async function getPastAppointment(userID: string, therapistID: string): Promise<PastAppointment[]> {
+  const token = await getToken();
+
+  try {
+    const response = await fetch(
+      `${API_URL}/appointment/past?userID=${userID}&therapistID=${therapistID}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch appointment history");
+    }
+
+    const data: PastAppointment[] = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching appointment history:", error);
+    return [];
+  }
+}

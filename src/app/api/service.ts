@@ -180,3 +180,33 @@ export async function fetchChatRoomsWithMessages(): Promise<ChatRoom[] | undefin
     return undefined;
   }
 }
+
+export interface CheckInHistory {
+  id?: string;
+  mood_score: number;
+  check_in_date: string;
+}
+
+export async function get30DaysMoodHistory(userID: string): Promise<CheckInHistory[]> {
+  const token = await getToken();
+
+  try {
+    const response = await fetch(`${API_URL}/checkins/30-days-history?userID=${userID}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch 30-day mood history");
+    }
+
+    const data: CheckInHistory[] = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching 30-day mood history:", error);
+    return [];
+  }
+}
