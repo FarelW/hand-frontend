@@ -1,115 +1,129 @@
 "use client";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useState, FormEvent, useEffect, Suspense } from "react";
-import { User, Pill, HelpCircle, BookOpen, ArrowLeft } from "lucide-react";
+
+import type React from "react";
+
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ArrowLeft,
+  Upload,
+  Users,
+  Pill,
+  HelpCircle,
+  BookOpen,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast, Toaster } from "sonner";
 import {
   createTherapist,
-  CreateTherapistDTO,
+  type CreateTherapistDTO,
   uploadImage,
 } from "@/app/api/user";
 import { addMedication } from "@/app/api/medication";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
-export const dynamic = "force-dynamic";
-
-type TherapistForm = {
-  name: string;
-  email: string;
-  phoneNumber: string;
-  password: string;
-  location: string;
-  specialization: string;
-  consultation: string;
-  appointmentRate: number;
-};
-
-type MedicationsForm = {
-  medName: string;
-  stock: number;
-  price: number;
-  description: string;
-  requiresPrescription: boolean;
-  image: File | null;
-};
-
-type HelpForm = {
-  topic: string;
-  category: string;
-  content: string;
-};
-
-type ArticlesForm = {
-  title: string;
-  type: string;
-  content: string;
-};
+import { addMedia } from "@/app/api/media";
 
 export default function AddPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [initialCategory, setInitialCategory] = useState<string>("Therapist");
-  console.log(searchParams);
+  const [category, setCategory] = useState<string>("Therapist");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStep, setFormStep] = useState(0);
 
-  useEffect(() => {
-    const category = searchParams.get("category") || "Therapist";
-    setInitialCategory(category);
-  }, [searchParams]);
-
-  // Form states based on category
-  const [therapistForm, setTherapistForm] = useState<TherapistForm>({
+  const [therapistForm, setTherapistForm] = useState({
     name: "",
     email: "",
     phoneNumber: "",
     password: "",
     location: "",
     specialization: "",
-    consultation: "",
+    consultation: "online",
     appointmentRate: 0,
   });
-  const [medicationsForm, setMedicationsForm] = useState<MedicationsForm>({
+
+  const [medicationsForm, setMedicationsForm] = useState({
     medName: "",
     stock: 0,
     price: 0,
     description: "",
     requiresPrescription: false,
-    image: null,
+    image: null as File | null, 
+    imagePreview: "",
   });
-  const [helpForm, setHelpForm] = useState<HelpForm>({
+
+  const [helpForm, setHelpForm] = useState({
     topic: "",
     category: "",
     content: "",
   });
-  const [articlesForm, setArticlesForm] = useState<ArticlesForm>({
+
+  const [articlesForm, setArticlesForm] = useState({
     title: "",
-    type: "article",
+    type: "article", 
     content: "",
+    image: null as File | null, 
+    imagePreview: "", 
   });
 
-  const categories = [
-    { name: "Therapist", icon: User, color: "bg-[#D7CEC7]" },
-    { name: "Medications", icon: Pill, color: "bg-[#F3D7D7]" },
-    { name: "Help", icon: HelpCircle, color: "bg-[#D7E7E8]" },
-    { name: "Articles", icon: BookOpen, color: "bg-[#E1D7E8]" },
-  ];
+  useEffect(() => {
+    const categoryParam = searchParams.get("category") || "Therapist";
+    setCategory(categoryParam);
+  }, [searchParams]);
 
-  const getCategoryColor = (name: string) => {
-    return categories.find((cat) => cat.name === name)?.color || "bg-gray-200";
+  const handleImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    formType: "medications" | "articles"
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (formType === "medications") {
+        setMedicationsForm({
+          ...medicationsForm,
+          image: file,
+          imagePreview: URL.createObjectURL(file),
+        });
+      } else if (formType === "articles") {
+        setArticlesForm({
+          ...articlesForm,
+          image: file,
+          imagePreview: URL.createObjectURL(file),
+        });
+      }
+    }
   };
 
-  const getCategoryIcon = (name: string) => {
-    const CategoryIcon =
-      categories.find((cat) => cat.name === name)?.icon || User;
-    return <CategoryIcon className="w-6 h-6" />;
+  const nextStep = () => {
+    setFormStep(formStep + 1);
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const prevStep = () => {
+    setFormStep(formStep - 1);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
-      if (initialCategory === "Therapist") {
+      if (category === "Therapist") {
         const therapistPayload: CreateTherapistDTO = {
           name: therapistForm.name,
           email: therapistForm.email,
@@ -123,14 +137,12 @@ export default function AddPage() {
 
         const result = await createTherapist(therapistPayload);
         if (result.success) {
-          toast.success("Therapist added successfully!");
+          toast.success("Therapist added successfully");
           router.push("/admin-dashboard");
         } else {
           toast.error(`Failed to add therapist: ${result.message}`);
         }
-      }
-
-      if (initialCategory === "Medications") {
+      } else if (category === "Medications") {
         let imageUrl = "";
         if (medicationsForm.image) {
           const uploadResult = await uploadImage(medicationsForm.image);
@@ -138,6 +150,7 @@ export default function AddPage() {
             imageUrl = uploadResult.imageUrl;
           } else {
             toast.error(`Error uploading image: ${uploadResult.message}`);
+            setIsSubmitting(false);
             return;
           }
         }
@@ -153,259 +166,414 @@ export default function AddPage() {
 
         const result = await addMedication(medicationPayload);
         if (result.success) {
-          toast.success("Medication added successfully!");
+          toast.success("Medication added successfully");
           router.push("/admin-dashboard");
         } else {
           toast.error(`Failed to add medication: ${result.message}`);
         }
+      } else if (category === "Help" || category === "articles") {
+        let imageUrl = "";
+        if (articlesForm.image) {
+          const uploadResult = await uploadImage(articlesForm.image);
+          if (uploadResult.success) {
+            imageUrl = uploadResult.imageUrl;
+          } else {
+            toast.error(`Error uploading image: ${uploadResult.message}`);
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
+        const mediaPayload = {
+          title: articlesForm.title,
+          type: articlesForm.type,
+          content: articlesForm.content,
+          image_url: imageUrl,
+        };
+
+        const result = await addMedia(mediaPayload);
+        if (result.success) {
+          toast.success("Media added successfully");
+          router.push("/admin-dashboard");
+        } else {
+          toast.error(`Failed to add media: ${result.message}`);
+        }
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error("An error occurred while submitting the form.");
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getCategoryIcon = () => {
+    switch (category) {
+      case "Therapist":
+        return <Users className="h-6 w-6" />;
+      case "Medications":
+        return <Pill className="h-6 w-6" />;
+      case "Help":
+        return <HelpCircle className="h-6 w-6" />;
+      case "articles":
+        return <BookOpen className="h-6 w-6" />;
+      default:
+        return <Users className="h-6 w-6" />;
+    }
+  };
+
+  const getCategoryColor = () => {
+    switch (category) {
+      case "Therapist":
+        return "bg-blue-600";
+      case "Medications":
+        return "bg-purple-600";
+      case "Help":
+        return "bg-green-600";
+      case "articles":
+        return "bg-amber-600";
+      default:
+        return "bg-blue-600";
     }
   };
 
   return (
-    <Suspense fallback={<div>Loading ..</div>}>
-      <div className="min-h-screen bg-[#4A4A4A] text-white pt-24 px-10 sm:px-20">
-        <header className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold font-gloock">Hello, Admin!</h1>
-        </header>
-
-        <div
-          className={`${getCategoryColor(
-            initialCategory
-          )} text-black p-4 rounded-lg`}
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-4xl mx-auto">
+        <Button
+          variant="ghost"
+          className="mb-6"
+          onClick={() => router.push("/admin-dashboard")}
         >
-          <div className="flex flex-row items-center justify-between mb-4">
-            <button
-              className="text-black flex items-center"
-              onClick={() => router.push("/admin-dashboard")}
-            >
-              <ArrowLeft className="w-6 h-6 mr-2" />
-              Back
-            </button>
-            <div className="text-2xl flex items-center">
-              {getCategoryIcon(initialCategory)}
-              <span className="ml-2">Add {initialCategory}</span>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
+
+        <Card>
+          <CardHeader className={`${getCategoryColor()} text-white`}>
+            <div className="flex items-center gap-2">
+              {getCategoryIcon()}
+              <CardTitle className="text-2xl">Add {category}</CardTitle>
             </div>
-          </div>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {initialCategory === "Therapist" && (
-              <>
-                <div>
-                  <label htmlFor="name">Name</label>
-                  <input
-                    id="name"
-                    value={therapistForm.name}
-                    onChange={(e) =>
-                      setTherapistForm({
-                        ...therapistForm,
-                        name: e.target.value,
-                      })
-                    }
-                    placeholder="Enter therapist's name"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email">Email</label>
-                  <input
-                    id="email"
-                    value={therapistForm.email}
-                    onChange={(e) =>
-                      setTherapistForm({
-                        ...therapistForm,
-                        email: e.target.value,
-                      })
-                    }
-                    placeholder="Enter email"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
-                </div>
+          </CardHeader>
 
-                {/* Add phone number field */}
-                <div>
-                  <label htmlFor="phoneNumber">Phone Number</label>
-                  <input
-                    id="phoneNumber"
-                    value={therapistForm.phoneNumber}
-                    onChange={(e) =>
-                      setTherapistForm({
-                        ...therapistForm,
-                        phoneNumber: e.target.value,
-                      })
-                    }
-                    placeholder="Enter phone number"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
-                </div>
+          <CardContent className="pt-6">
+            {category === "Therapist" && (
+              <Tabs value={`step-${formStep}`} className="w-full">
+                <TabsList className="grid grid-cols-3 mb-8">
+                  <TabsTrigger value="step-0" disabled>
+                    Personal Info
+                  </TabsTrigger>
+                  <TabsTrigger value="step-1" disabled>
+                    Professional Details
+                  </TabsTrigger>
+                  <TabsTrigger value="step-2" disabled>
+                    Confirmation
+                  </TabsTrigger>
+                </TabsList>
 
-                <div>
-                  <label htmlFor="password">Password</label>
-                  <input
-                    id="password"
-                    value={therapistForm.password}
-                    onChange={(e) =>
-                      setTherapistForm({
-                        ...therapistForm,
-                        password: e.target.value,
-                      })
-                    }
-                    placeholder="Enter password"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="location">Location</label>
-                  <input
-                    id="location"
-                    value={therapistForm.location}
-                    onChange={(e) =>
-                      setTherapistForm({
-                        ...therapistForm,
-                        location: e.target.value,
-                      })
-                    }
-                    placeholder="Enter location"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="specialization">Specialization</label>
-                  <input
-                    id="specialization"
-                    value={therapistForm.specialization}
-                    onChange={(e) =>
-                      setTherapistForm({
-                        ...therapistForm,
-                        specialization: e.target.value,
-                      })
-                    }
-                    placeholder="Enter specialization"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
-                </div>
+                <TabsContent value="step-0" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        value={therapistForm.name}
+                        onChange={(e) =>
+                          setTherapistForm({
+                            ...therapistForm,
+                            name: e.target.value,
+                          })
+                        }
+                        placeholder="Enter therapist's full name"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={therapistForm.email}
+                        onChange={(e) =>
+                          setTherapistForm({
+                            ...therapistForm,
+                            email: e.target.value,
+                          })
+                        }
+                        placeholder="Enter email address"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phoneNumber">Phone Number</Label>
+                      <Input
+                        id="phoneNumber"
+                        value={therapistForm.phoneNumber}
+                        onChange={(e) =>
+                          setTherapistForm({
+                            ...therapistForm,
+                            phoneNumber: e.target.value,
+                          })
+                        }
+                        placeholder="Enter phone number"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={therapistForm.password}
+                        onChange={(e) =>
+                          setTherapistForm({
+                            ...therapistForm,
+                            password: e.target.value,
+                          })
+                        }
+                        placeholder="Create a password"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end mt-6">
+                    <Button
+                      onClick={nextStep}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Next Step
+                    </Button>
+                  </div>
+                </TabsContent>
 
-                {/* Consultation dropdown */}
-                <div>
-                  <label htmlFor="consultation">Consultation Type</label>
-                  <select
-                    id="consultation"
-                    value={therapistForm.consultation}
-                    onChange={(e) =>
-                      setTherapistForm({
-                        ...therapistForm,
-                        consultation: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  >
-                    <option value="">Select a consultation type</option>
-                    <option value="online">Online</option>
-                    <option value="offline">Offline</option>
-                    <option value="hybrid">Hybrid</option>
-                  </select>
-                </div>
+                <TabsContent value="step-1" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="location">Location</Label>
+                      <Input
+                        id="location"
+                        value={therapistForm.location}
+                        onChange={(e) =>
+                          setTherapistForm({
+                            ...therapistForm,
+                            location: e.target.value,
+                          })
+                        }
+                        placeholder="Enter location"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="specialization">Specialization</Label>
+                      <Input
+                        id="specialization"
+                        value={therapistForm.specialization}
+                        onChange={(e) =>
+                          setTherapistForm({
+                            ...therapistForm,
+                            specialization: e.target.value,
+                          })
+                        }
+                        placeholder="Enter specialization"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="consultation">Consultation Type</Label>
+                      <Select
+                        value={therapistForm.consultation}
+                        onValueChange={(value) =>
+                          setTherapistForm({
+                            ...therapistForm,
+                            consultation: value,
+                          })
+                        }
+                      >
+                        <SelectTrigger id="consultation">
+                          <SelectValue placeholder="Select consultation type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="online">Online</SelectItem>
+                          <SelectItem value="offline">Offline</SelectItem>
+                          <SelectItem value="hybrid">Hybrid</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="appointmentRate">
+                        Appointment Rate ($)
+                      </Label>
+                      <Input
+                        id="appointmentRate"
+                        type="number"
+                        value={therapistForm.appointmentRate.toString()}
+                        onChange={(e) =>
+                          setTherapistForm({
+                            ...therapistForm,
+                            appointmentRate: Number(e.target.value),
+                          })
+                        }
+                        placeholder="Enter hourly rate"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-between mt-6">
+                    <Button variant="outline" onClick={prevStep}>
+                      Previous Step
+                    </Button>
+                    <Button
+                      onClick={nextStep}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Review Details
+                    </Button>
+                  </div>
+                </TabsContent>
 
-                <div>
-                  <label htmlFor="appointmentRate">Appointment Rate</label>
-                  <input
-                    id="appointmentRate"
-                    type="number"
-                    value={therapistForm.appointmentRate}
-                    onChange={(e) =>
-                      setTherapistForm({
-                        ...therapistForm,
-                        appointmentRate: parseFloat(e.target.value),
-                      })
-                    }
-                    placeholder="Enter appointment rate"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
-                </div>
-              </>
-            )}
-
-            {initialCategory === "Medications" && (
-              <>
-                <Card className="w-full max-w-2xl mx-auto">
-                  <CardHeader>
-                    <CardTitle className="text-2xl font-bold text-center">
-                      Medication Registration
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label htmlFor="medName">Medication Name</label>
-                        <Input
-                          id="medName"
-                          value={medicationsForm.medName}
-                          onChange={(e) =>
-                            setMedicationsForm({
-                              ...medicationsForm,
-                              medName: e.target.value,
-                            })
-                          }
-                          placeholder="Enter medication name"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label htmlFor="stock">Stock</label>
-                        <Input
-                          id="stock"
-                          type="number"
-                          value={medicationsForm.stock.toString()}
-                          onChange={(e) =>
-                            setMedicationsForm({
-                              ...medicationsForm,
-                              stock: parseInt(e.target.value),
-                            })
-                          }
-                          placeholder="Enter stock quantity"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label htmlFor="price">Price</label>
-                        <Input
-                          id="price"
-                          type="number"
-                          value={medicationsForm.price.toString()}
-                          onChange={(e) =>
-                            setMedicationsForm({
-                              ...medicationsForm,
-                              price: parseFloat(e.target.value),
-                            })
-                          }
-                          placeholder="Enter price"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label htmlFor="requiresPrescription">
-                          Requires Prescription
-                        </label>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="requiresPrescription"
-                            checked={medicationsForm.requiresPrescription}
-                            onCheckedChange={(checked: boolean) =>
-                              setMedicationsForm({
-                                ...medicationsForm,
-                                requiresPrescription: checked,
-                              })
-                            }
-                          />
-                          <label htmlFor="requiresPrescription">
-                            {medicationsForm.requiresPrescription
-                              ? "Yes"
-                              : "No"}
-                          </label>
+                <TabsContent value="step-2">
+                  <div className="space-y-6">
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                      <h3 className="font-semibold text-lg mb-4">
+                        Review Therapist Information
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-500">Full Name</p>
+                          <p className="font-medium">{therapistForm.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Email Address</p>
+                          <p className="font-medium">{therapistForm.email}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Phone Number</p>
+                          <p className="font-medium">
+                            {therapistForm.phoneNumber}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Location</p>
+                          <p className="font-medium">
+                            {therapistForm.location}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">
+                            Specialization
+                          </p>
+                          <p className="font-medium">
+                            {therapistForm.specialization}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">
+                            Consultation Type
+                          </p>
+                          <p className="font-medium capitalize">
+                            {therapistForm.consultation}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">
+                            Appointment Rate
+                          </p>
+                          <p className="font-medium">
+                            ${therapistForm.appointmentRate}/hr
+                          </p>
                         </div>
                       </div>
                     </div>
+                    <div className="flex justify-between">
+                      <Button variant="outline" onClick={prevStep}>
+                        Previous Step
+                      </Button>
+                      <Button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        {isSubmitting ? "Adding..." : "Add Therapist"}
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            )}
+
+            {category === "Medications" && (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-6">
                     <div className="space-y-2">
-                      <label htmlFor="description">Description</label>
+                      <Label htmlFor="medName">Medication Name</Label>
+                      <Input
+                        id="medName"
+                        value={medicationsForm.medName}
+                        onChange={(e) =>
+                          setMedicationsForm({
+                            ...medicationsForm,
+                            medName: e.target.value,
+                          })
+                        }
+                        placeholder="Enter medication name"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stock">Stock Quantity</Label>
+                      <Input
+                        id="stock"
+                        type="number"
+                        value={medicationsForm.stock.toString()}
+                        onChange={(e) =>
+                          setMedicationsForm({
+                            ...medicationsForm,
+                            stock: Number(e.target.value),
+                          })
+                        }
+                        placeholder="Enter stock quantity"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="price">Price ($)</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        value={medicationsForm.price.toString()}
+                        onChange={(e) =>
+                          setMedicationsForm({
+                            ...medicationsForm,
+                            price: Number(e.target.value),
+                          })
+                        }
+                        placeholder="Enter price"
+                        required
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="requiresPrescription"
+                        checked={medicationsForm.requiresPrescription}
+                        onCheckedChange={(checked) =>
+                          setMedicationsForm({
+                            ...medicationsForm,
+                            requiresPrescription: checked,
+                          })
+                        }
+                      />
+                      <Label htmlFor="requiresPrescription">
+                        Requires Prescription
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
                       <Textarea
                         id="description"
                         value={medicationsForm.description}
@@ -417,125 +585,181 @@ export default function AddPage() {
                         }
                         placeholder="Enter medication description"
                         rows={4}
+                        required
                       />
                     </div>
+
                     <div className="space-y-2">
-                      <label htmlFor="image">Image</label>
-                      <Input
-                        id="image"
-                        type="file"
-                        onChange={(e) =>
-                          setMedicationsForm({
-                            ...medicationsForm,
-                            image: e.target.files ? e.target.files[0] : null,
-                          })
+                      <Label htmlFor="image">Medication Image</Label>
+                      <div
+                        className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                        onClick={() =>
+                          document.getElementById("image")?.click()
                         }
-                        className="cursor-pointer"
-                      />
+                      >
+                        <input
+                          id="image"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleImageChange(e, "medications")}
+                        />
+                        {medicationsForm.imagePreview ? (
+                          <div className="flex flex-col items-center">
+                            <img
+                              src={
+                                medicationsForm.imagePreview ||
+                                "/placeholder.svg"
+                              }
+                              alt="Medication preview"
+                              className="max-h-40 object-contain mb-2"
+                            />
+                            <p className="text-sm text-gray-500">
+                              Click to change image
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center">
+                            <Upload className="h-10 w-10 text-gray-400 mb-2" />
+                            <p className="text-sm font-medium">
+                              Click to upload an image
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              SVG, PNG, JPG or GIF (max. 2MB)
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </>
+                  </div>
+                </div>
+              </form>
             )}
 
-            {initialCategory === "Help" && (
-              <>
-                <div>
-                  <label htmlFor="topic">Help Topic</label>
-                  <input
-                    id="topic"
-                    value={helpForm.topic}
-                    onChange={(e) =>
-                      setHelpForm({ ...helpForm, topic: e.target.value })
-                    }
-                    placeholder="Enter help topic"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
+            {category === "articles" && (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      id="title"
+                      value={articlesForm.title}
+                      onChange={(e) =>
+                        setArticlesForm({
+                          ...articlesForm,
+                          title: e.target.value,
+                        })
+                      }
+                      placeholder="Enter title"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Content Type</Label>
+                    <Select
+                      value={articlesForm.type}
+                      onValueChange={(value) =>
+                        setArticlesForm({ ...articlesForm, type: value })
+                      }
+                    >
+                      <SelectTrigger id="type">
+                        <SelectValue placeholder="Select content type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="article">Article</SelectItem>
+                        <SelectItem value="video">Video</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="articleContent">
+                      {articlesForm.type === "video"
+                        ? "Video URL"
+                        : "Article Content"}
+                    </Label>
+                    <Textarea
+                      id="articleContent"
+                      value={articlesForm.content}
+                      onChange={(e) =>
+                        setArticlesForm({
+                          ...articlesForm,
+                          content: e.target.value,
+                        })
+                      }
+                      placeholder={
+                        articlesForm.type === "video"
+                          ? "Enter video URL"
+                          : "Enter article content"
+                      }
+                      rows={articlesForm.type === "video" ? 2 : 10}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="image">Media Image</Label>
+                    <div
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => document.getElementById("image")?.click()}
+                    >
+                      <input
+                        id="image"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleImageChange(e, "articles")}
+                      />
+                      {articlesForm.imagePreview ? (
+                        <div className="flex flex-col items-center">
+                          <img
+                            src={
+                              articlesForm.imagePreview || "/placeholder.svg"
+                            }
+                            alt="Article preview"
+                            className="max-h-40 object-contain mb-2"
+                          />
+                          <p className="text-sm text-gray-500">
+                            Click to change image
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          <Upload className="h-10 w-10 text-gray-400 mb-2" />
+                          <p className="text-sm font-medium">
+                            Click to upload an image
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            SVG, PNG, JPG or GIF (max. 2MB)
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="category">Category</label>
-                  <input
-                    id="category"
-                    value={helpForm.category}
-                    onChange={(e) =>
-                      setHelpForm({ ...helpForm, category: e.target.value })
-                    }
-                    placeholder="Enter category"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="content">Help Content</label>
-                  <textarea
-                    id="content"
-                    value={helpForm.content}
-                    onChange={(e) =>
-                      setHelpForm({ ...helpForm, content: e.target.value })
-                    }
-                    placeholder="Enter help content"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
-                </div>
-              </>
+              </form>
             )}
-            {initialCategory === "Articles" && (
-              <>
-                <div>
-                  <label htmlFor="title">Title</label>
-                  <input
-                    id="title"
-                    value={articlesForm.title}
-                    onChange={(e) =>
-                      setArticlesForm({
-                        ...articlesForm,
-                        title: e.target.value,
-                      })
-                    }
-                    placeholder="Enter title"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="type">Type</label>
-                  <input
-                    id="type"
-                    value={articlesForm.type}
-                    onChange={(e) =>
-                      setArticlesForm({
-                        ...articlesForm,
-                        type: e.target.value,
-                      })
-                    }
-                    placeholder="Article or Video"
-                    className="w-full p-2 border rounded-lg focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="content">Content/URL</label>
-                  <textarea
-                    id="content"
-                    value={articlesForm.content}
-                    onChange={(e) =>
-                      setArticlesForm({
-                        ...articlesForm,
-                        content: e.target.value,
-                      })
-                    }
-                    placeholder="Enter content or video URL"
-                    className="w-full p-2 border rounded-lg focus:outline-nonee"
-                  />
-                </div>
-              </>
-            )}
-            <button
-              type="submit"
-              className="w-full bg-[#4A4A4A] text-white p-2 hover:bg-[#3A3A3A] rounded-lg"
+          </CardContent>
+
+          <CardFooter className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => router.push("/admin-dashboard")}
             >
-              Add {initialCategory}
-            </button>
-          </form>
-        </div>
+              Cancel
+            </Button>
+            {(category === "Medications" ||
+              category === "Help" ||
+              category === "articles") && (
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className={`${getCategoryColor()} hover:opacity-90`}
+              >
+                {isSubmitting ? "Adding..." : `Add ${category}`}
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
       </div>
-    </Suspense>
+    </div>
   );
 }

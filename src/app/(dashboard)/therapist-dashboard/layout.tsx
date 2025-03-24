@@ -2,7 +2,7 @@ import ClientLayout from "@/app/clientlayout";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export default function DashboardLayout({
+export default function TherapistLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -15,5 +15,5 @@ export default function DashboardLayout({
     redirect("/");
   }
 
-  return <div>{children}</div>;
+  return <ClientLayout>{children}</ClientLayout>;
 }

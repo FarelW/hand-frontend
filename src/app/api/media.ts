@@ -32,6 +32,32 @@ export async function fetchMedia() {
   }
 }
 
+export async function addMedia(mediaPayload: { title: string; type: string; content: string; image_url: string }) {
+  const token = await getToken();
+  try {
+    const response = await fetch(`${API_URL}/media`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(mediaPayload),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return { success: true, message: "Media added successfully" };
+    } else {
+      throw new Error(data.message || "Failed to add media");
+    }
+  } catch (error) {
+    console.error("Error adding media:", error);
+    return { success: false, message: error instanceof Error ? error.message : "An unknown error occurred" };
+  }
+}
+
 interface MediaItem {
   ID: string;
   Type: "article" | "video";

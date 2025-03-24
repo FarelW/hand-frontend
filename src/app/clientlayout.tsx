@@ -10,11 +10,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
 
   const isTherapistDashboard = pathname.startsWith("/therapist");
+  const isAdminDashboard = pathname.startsWith("/admin")
   return (
     <>
-        <Navbar/>
+        {!isAdminDashboard && <Navbar/>}
         {children}
-        {!isTherapistDashboard && <FloatingBar />}
+        {!isTherapistDashboard && !isAdminDashboard && <FloatingBar />}
         <Toaster position="bottom-right" richColors />{" "}
     </>
   );

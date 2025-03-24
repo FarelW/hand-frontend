@@ -1,8 +1,7 @@
-import ClientLayout from "@/app/clientlayout";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export default function DashboardLayout({
+export default function AdminLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -11,7 +10,7 @@ export default function DashboardLayout({
   const roleCookie = cookieStore.get("user_role");
   const role = roleCookie?.value;
 
-  if (role !== "therapist" && role !== "admin") {
+  if (role !== "admin") {
     redirect("/");
   }
 
