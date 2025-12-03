@@ -24,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getCookie } from "cookies-next";
-import { uploadImage } from "@/app/api/user";
 // Define form types for each category
 type TherapistForm = {
   name: string;

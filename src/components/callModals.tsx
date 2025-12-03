@@ -188,8 +188,6 @@ export const OutgoingCallModal: React.FC<OutgoingCallModalProps> = ({
 export interface VideoCallModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentUserId: string;
-  targetUserId: string;
   targetUserName: string;
   targetUserImage?: string;
 }
@@ -197,8 +195,6 @@ export interface VideoCallModalProps {
 export const VideoCallModal: React.FC<VideoCallModalProps> = ({
   isOpen,
   onClose,
-  currentUserId,
-  targetUserId,
   targetUserName,
   targetUserImage,
 }) => {

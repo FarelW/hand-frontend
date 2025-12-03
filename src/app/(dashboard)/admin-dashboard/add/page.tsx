@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import {
   createTherapist,
   type CreateTherapistDTO,
@@ -69,11 +69,6 @@ export default function AddPage() {
     imagePreview: "",
   });
 
-  const [helpForm, setHelpForm] = useState({
-    topic: "",
-    category: "",
-    content: "",
-  });
 
   const [articlesForm, setArticlesForm] = useState({
     title: "",

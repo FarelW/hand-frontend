@@ -101,7 +101,6 @@ function DashboardContent() {
   const [therapists, setTherapists] = useState<Therapist[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // useSidebar is safe here because we are inside <SidebarProvider>
   const { state } = useSidebar();
@@ -109,7 +108,6 @@ function DashboardContent() {
   useEffect(() => {
     async function fetchData() {
       try {
-        setLoading(true);
 
         const token = getCookie("authToken");
         if (!token) {
@@ -138,8 +136,6 @@ function DashboardContent() {
         setArticles(Array.isArray(mediaData) ? mediaData : []);
       } catch (error) {
         console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
       }
     }
 
