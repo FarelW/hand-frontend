@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { getApiUrl } from "@/utils/api";
+const API_URL = getApiUrl();
 import { getToken } from "@/utils/function";
 export async function getTherapistDetails(therapistId: string) {
   const token = await getToken();

@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getCookie } from "cookies-next";
+import { getApiUrl } from "@/utils/api";
 // Define form types for each category
 type TherapistForm = {
   name: string;
@@ -61,7 +62,7 @@ type HelpForm = {
   content: string;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = getApiUrl();
 
 export default function EditPage() {
   const router = useRouter();

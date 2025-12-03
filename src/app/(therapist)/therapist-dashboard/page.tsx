@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/datePicker";
 import { closeSchedule, fetchUpcomingAppointment } from "@/app/api/therapist";
 import { getCookie } from "cookies-next";
+import { getApiUrl } from "@/utils/api";
 
 interface Therapist {
   image_url: string;
@@ -54,7 +55,7 @@ interface Appointment {
   PaymentStatus: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = getApiUrl();
 
 export default function TherapistDashboard() {
   const userId = getCookie("user_id");

@@ -1,6 +1,7 @@
 import { getToken } from "@/utils/function";
+import { getApiUrl } from "@/utils/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = getApiUrl();
 
 // Function to verify OTP
 export async function verifyOTP(otp: string) {

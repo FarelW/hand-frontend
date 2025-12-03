@@ -1,5 +1,6 @@
 import { getToken } from "@/utils/function";
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { getApiUrl } from "@/utils/api";
+const API_URL = getApiUrl();
 
 export async function saveJournalEntry(journalEntry: string) {
   const token = await getToken();

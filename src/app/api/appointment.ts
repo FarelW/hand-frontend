@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = getApiUrl();
+import { getApiUrl } from "@/utils/api";
 import { getToken } from "@/utils/function";
 
 export async function createAppointment(appointmentData: {

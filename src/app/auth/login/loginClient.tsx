@@ -4,8 +4,9 @@ import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import { setCookie } from "cookies-next";
 import LoadingBouncer from "@/components/Loading";
+import { getApiUrl } from "@/utils/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = getApiUrl();
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
