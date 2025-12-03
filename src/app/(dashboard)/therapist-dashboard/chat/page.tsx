@@ -533,8 +533,6 @@ const ChatInterface: React.FC = () => {
         <VideoCallModal
           isOpen={true}
           onClose={handleEndVideoCall}
-          currentUserId={currentUserId}
-          targetUserId={videoCallActive.targetUserId}
           targetUserName={videoCallActive.targetUserName}
           targetUserImage={videoCallActive.targetUserImage}
         />
